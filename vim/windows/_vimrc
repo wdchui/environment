@@ -1,0 +1,169 @@
+" DEFAULT {{{
+source $VIMRUNTIME/vimrc_example.vim
+source $VIMRUNTIME/mswin.vim
+behave mswin
+
+set diffexpr=MyDiff()
+function MyDiff()
+  let opt = '-a --binary '
+  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif
+  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif
+  let arg1 = v:fname_in
+  if arg1 =~ ' ' | let arg1 = '"' . arg1 . '"' | endif
+  let arg2 = v:fname_new
+  if arg2 =~ ' ' | let arg2 = '"' . arg2 . '"' | endif
+  let arg3 = v:fname_out
+  if arg3 =~ ' ' | let arg3 = '"' . arg3 . '"' | endif
+  if $VIMRUNTIME =~ ' '
+    if &sh =~ '\<cmd'
+      if empty(&shellxquote)
+        let l:shxq_sav = ''
+        set shellxquote&
+      endif
+      let cmd = '"' . $VIMRUNTIME . '\diff"'
+    else
+      let cmd = substitute($VIMRUNTIME, ' ', '" ', '') . '\diff"'
+    endif
+  else
+    let cmd = $VIMRUNTIME . '\diff'
+  endif
+  silent execute '!' . cmd . ' ' . opt . arg1 . ' ' . arg2 . ' > ' . arg3
+  if exists('l:shxq_sav')
+    let &shellxquote=l:shxq_sav
+  endif
+endfunction
+"}}}
+
+" Startup {{{
+set nocompatible
+filetype off
+
+if has('win32')
+    set rtp+=$VIM/vimfiles/bundle/Vundle.vim/
+    call vundle#begin('$VIM/vimfiles/bundle/')
+else
+    set rtp+=~/.vim/bundle/Vundle.vim
+    call vundle#begin()
+endif
+
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'luochen1990/rainbow'
+Plugin 'skywind3000/asyncrun.vim'
+call vundle#end()
+
+filetype indent plugin on
+
+" vim 文件折叠方式为 marker
+augroup ft_vim
+    au!
+
+    au FileType vim setlocal foldmethod=marker
+augroup END
+" }}}
+
+" General {{{
+set history=1024
+set autochdir
+set whichwrap=b,s,<,>,[,]
+set nobomb
+set backspace=indent,eol,start whichwrap+=<,>,[,]
+" Vim 的默认寄存器和系统剪贴板共享
+set clipboard+=unnamed
+" 设置 alt 键不映射到菜单栏
+set winaltkeys=no
+if has('win32')
+    set noundofile " 不生成 Undo 文件
+    set nobackup " 不生成备份文件，在 win下使用
+    set noswapfile " 不生成交换文件 在 win下使用
+
+endif
+if has('gui_running')
+    set nobackup " 不生成备份文件，在 win下使用
+    set noswapfile " 不生成交换文件 在 win下使用
+endif
+" }}}
+
+" GUI {{{
+colorscheme flattened_dark
+
+source $VIMRUNTIME/delmenu.vim
+source $VIMRUNTIME/menu.vim
+set cursorline
+" 窗口大小
+set lines=35 columns=140
+" 分割出来的窗口位于当前窗口下边/右边
+set splitbelow
+set splitright
+"不显示工具/菜单栏
+set guioptions-=T
+set guioptions-=m
+set guioptions-=L
+set guioptions-=r
+set guioptions-=b
+" 使用内置 tab 样式而不是 gui
+set guioptions-=e
+let g:rainbow_active=1
+let g:rainbow_conf = {'guifgs':['red','orange','yellow','green','cyan','blue'],}
+" }}}
+
+" Format {{{
+set nu
+set fileformat=unix
+set noundofile
+set nobackup
+set noswapfile
+set cc=88
+set autoindent
+set smartindent
+set tabstop=4
+set expandtab
+set foldmethod=indent
+syntax on
+" }}}
+
+" Keymap {{{
+   " 在 vim 启动的时候默认开启 NERDTree（autocmd 可以缩写为 au）
+    autocmd VimEnter * NERDTree
+    " 按下 F2 调出/隐藏 NERDTree
+    nmap <silent> <F2> :NERDTreeToggle<CR>
+    " 将 NERDTree 的窗口设置在 vim 窗口的右侧（默认为左侧）
+    let NERDTreeWinPos="right"
+    " 显示行号
+    let NERDTreeShowLineNumbers=1
+    let NERDTreeAutoCenter=1
+    " 是否显示隐藏文件
+    let NERDTreeShowHidden=1
+    " 设置宽度
+    let NERDTreeWinSize=36
+    " 在终端启动vim时，共享NERDTree
+    let g:nerdtree_tabs_open_on_console_startup=1
+    " 忽略一下文件的显示
+    let NERDTreeIgnore=['\.pyc','\~$','\.swp']
+    " 显示书签列表
+    let NERDTreeShowBookmarks=1
+"}}}
+
+" Function {{{
+" Remove trailing whitespace when writing a buffer, but not for diff files.
+" From: Vigil
+" @see http://blog.bs2.to/post/EdwardLee/17961
+function! RemoveTrailingWhitespace()
+    if &ft != "diff"
+        let b:curcol = col(".")
+        let b:curline = line(".")
+        silent! %s/\s\+$//
+        silent! %s/\(\s*\n\)\+\%$//
+        call cursor(b:curline, b:curcol)
+    endif
+endfunction
+autocmd BufWritePre * call RemoveTrailingWhitespace()
+" }}}
+
+" Lang & Encoding {{{
+set fileencodings=utf-8,gbk2312,gbk,gb18030,cp936
+"set encoding=utf-8
+"set langmenu=zh_CN
+"set $LANG = 'en_US.UTF-8'
+"language messages zh_CN.UTF-8
+" }}}
