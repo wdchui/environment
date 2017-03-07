@@ -1,0 +1,7 @@
+{
+	"server":"",//服务器ip
+	"server_port":,//端口号建议1000以上
+	"password":"",//密码
+	"method":"aes-256-cfb",//加密方式
+	"timeout":60//超时时间
+}
